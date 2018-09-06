@@ -1,10 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  http://www.springframework.org/schema/util
+  http://www.springframework.org/schema/util/spring-util-4.0.xsd ">
 
     <bean id="fadacai" class="com.cxx.service.FDC" >
         <property name="fdc" value="一夜暴富"></property>
     </bean>
+
+    <bean id="car1" class="com.cxx.entity.Car">
+        <constructor-arg value="jx" type="java.lang.String"></constructor-arg>
+        <constructor-arg value="bama" type="java.lang.String"></constructor-arg>
+        <constructor-arg value="120" type="int"></constructor-arg>
+    </bean>
+
+
+    <bean id="car2" class="com.cxx.entity.Car">
+        <constructor-arg value="cxx" type="java.lang.String"></constructor-arg>
+        <constructor-arg value="fll" type="java.lang.String"></constructor-arg>
+        <constructor-arg value="5200.0" type="float"></constructor-arg>
+    </bean>
+
+    <bean class="com.cxx.entity.Persion" id="persion">
+        <property name="name" value="cxx"></property>
+        <property name="age" value="18"></property>
+        <!--可以使用property的ref属性建立bean之间的应用关系-->
+        <property name="car" ref="car1"></property>
+    </bean>
+
+    <bean class="com.cxx.entity.Persion" id="JX">
+        <property name="name" value="JX"></property>
+        <property name="age" value="18"></property>
+        <!--可以使用使用内部bean，内部bean并不需要设置太多东西，只需要一个全类名就好。因为内部bean只会用于JX的这个实例中，并不会用于其他的实例上-->
+        <property name="car">
+            <bean class="com.cxx.entity.Car">
+                <property name="company" value="Ford"/>
+                <property name="brand" value="Changan"/>
+                <property name="price" value="120000"/>
+            </bean>
+        </property>
+    </bean>
+
+    <bean class="com.cxx.entity.Persion" id="FDC">
+        <constructor-arg value="FDC"></constructor-arg>
+        <constructor-arg value="19"></constructor-arg>
+        <constructor-arg ref="car1"></constructor-arg>
+        <!--car里面的price属性必须得有setter方法。并且在car1这个实例中的这个属性都会修改为3000-->
+        <!--为级联属性复制-->
+        <property name="car.price" value="3000"></property>
+    </bean>
+
+    <!--测试集合属性-->
+    <bean id="YK" class="com.cxx.entity.collection.RichPersion">
+        <property name="name" value="YK"/>
+        <property name="age" value="20"/>
+        <property name="car">
+            <!--使用list对应的list集合实行-->
+            <list>
+                <ref bean="car1"></ref>
+                <ref bean="car2"/>
+            </list>
+        </property>
+    </bean>
+
+    <!--测试Map集合-->
+    <bean id="GDK" class="com.cxx.entity.collection.MoreRichPersion">
+        <property name="name" value="XDD"/>
+        <property name="age" value="19"/>
+        <property name="car">
+            <!--使用map 节点以及map的entry子节点配置Map类型的成员变量-->
+            <map>
+                <entry key="AA" value-ref="car1"/>
+                <entry key="BB" value-ref="car2"/>
+            </map>
+        </property>
+    </bean>
+
+    <!--测试PropetiesBean-->
+    <bean id="properties" class="com.cxx.entity.collection.DBProperties">
+        <property name="properties">
+            <!--使用props和prop子节点为Properties属性赋值-->
+            <props>
+                <prop key="user">user</prop>
+                <prop key="password">123</prop>
+                <prop key="jdbcUrl">jdbc:mysql:///test</prop>
+                <prop key="driverClass">com.mysql.jdbc.Driver</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!--配置单例的集合bean，以供多个bean进行引用，需要导入util命名空间，在idea中打出<util:后Alt+Enter便可自动导入了-->
+    <util:list id = "cars">
+        <ref bean="car1"/>
+        <ref bean="car2"/>
+    </util:list>
+
+    <bean class="com.cxx.entity.collection.RichPersion" id="rp">
+        <property name="name" value="rp"/>
+        <property name="age" value="20"/>
+        <property name="car" ref="cars"></property>
+    </bean>
+
 
 </beans>
