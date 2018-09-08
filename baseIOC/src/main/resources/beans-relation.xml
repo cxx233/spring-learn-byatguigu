@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+        <!--若一个bean的class属性没有指定，则该bean必须是一个抽象bean-->
+        <bean id="address"  p:city="GZ1" p:street="beijinglu" abstract="true"/>
+
+        <!--bean 配置继承：使用bean 的parent 属性指定继承哪个bean的配置-->
+        <bean id="address2" class="com.cxx.autowire.Address" parent="address" p:street="baiyunshan"  />
+
+        <bean class="com.cxx.autowire.Car" id="car" p:company="cxx" p:brand="fll" p:price="10000000" p:maxSpeed="5000" />
+
+        <!--要求在配置Persion时，必须有一个关联的car 换句话说persion 这个bean 依赖于Car这个bean
+            实验结果：虽然Persion中有一个car属性，但是依赖一个car 的bean 的时候并不会将bean注入到属性car中。
+            所以结果时car=null。依赖表明的说，我会依赖你。但是不一定说以来后就会有结果。
+        -->
+        <bean id="persion" class="com.cxx.autowire.Persion" p:name="cxx" p:address-ref="address2" depends-on="car"/>
+
+</beans>

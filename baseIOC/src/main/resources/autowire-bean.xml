@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean class="com.cxx.autowire.Car" id="car1" p:company="jx" p:brand="bm" p:price="100000000" ></bean>
+    <bean class="com.cxx.autowire.Address" id="address2" p:city="gz" p:street="mt"></bean>
+
+    <!--可以使用autowire属性指定自动装配的方式，byName 根据bean的名字（id）和当前的setter 风格的属性名进行自动装配
+        例如下方的例子：Rersion中有两个属性car、address。有两个封装方法setterCar,setterAddress.
+        那么自动装配根据Name来话，上面刚好有个id为car的bean，以及id为address的bean。则可以配置到id为jx的Persionbean中
+    -->
+    <bean class="com.cxx.autowire.Persion" id="jx" autowire="byName" p:name="jx"></bean>
+
+</beans>

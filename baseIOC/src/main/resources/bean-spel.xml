@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="address" class="com.cxx.spel.Address">
+        <!--使用SeEL 使用字面量-->
+        <property name="city" value="#{'GZ'}"/>
+        <property name="street" value="庙头" />
+    </bean>
+    <bean id="car" class="com.cxx.spel.Car" >
+        <property name="brand" value="Audi"/>
+        <property name="price" value="3000000"/>
+        <!--使用SpEL 引用类的静态属性-->
+        <property name="typePerimeter" value="#{T(java.lang.Math).PI*80}"></property>
+    </bean>
+    <bean id="person" class="com.cxx.spel.Persion" >
+        <!--使用SpEL 来引用其他的bean-->
+        <property name="car" value="#{car}"/>
+
+        <!--使用SpEL 来引用其他的Bean的属性-->
+        <property name="city" value="#{address.city}" />
+
+        <!--使用SpEL 中使用运算符-->
+        <property name="info" value="#{car.price >= 300000 ? '金领' : '白领' }"/>
+
+        <property name="name" value="cxx" />
+    </bean>
+</beans>

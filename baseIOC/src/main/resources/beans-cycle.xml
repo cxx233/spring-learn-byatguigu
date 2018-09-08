@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--
+        init-method="initCar" destroy-method="destroyCar" 表示的是，容器在创建的时候，会自动创建id为car的bean（反射，构造器创建/因为是单例模式，所以能否自动传教），
+        由于设置了init-method的方法是Car类中的某一个方法，则在创建bean时调用该方法。
+        destroy-method设置的方法时在容器关闭时所用到的。
+      -->
+    <bean id="car" class="com.cxx.cycle.Car" init-method="initCar" destroy-method="destroyCar">
+        <property name="brand" value="Audi"/>
+    </bean>
+
+    <bean id="address" class="com.cxx.cycle.Address" init-method="addressInit" destroy-method="addressDestroy" >
+        <property name="street" value="龙蟠里"/>
+    </bean>
+
+    <!--
+        实现BeanPostProcessor 接口，并具体提供
+        Object postProcessBeforeInitialization(Object o, String s) ：init-method 之 前 被调用
+        Object postProcessAfterInitialization(Object o, String s)： init-method 指 后 被调用
+        的实现
+
+        o: bean 实例本身
+        s: IOC 容器配置的bean的名字
+        返回值：是实际上返回给用户的那个Bean，注意：可以在以上两个方法中修改返回的Bean，甚至返回一个新的bean
+    -->
+    <!--配置bean 的后置处理器：不需要配置id， IOC 容器自动识别是一个 实现BeanPostProcessor-->
+    <bean class="com.cxx.cycle.MyBeanPostProcessor"></bean>
+
+</beans>

@@ -746,3 +746,779 @@ Map的说明
 > Persion{name='richPersion', age=18, car=[Car{company='jx', brand='bama', maxSpeed=120, price=3000.0}, Car{company='cxx', brand='fll', maxSpeed=0, price=5200.0}]}
 
 一句话总结：P命名空间是在bean中配置封装的类的属性值的。
+
+
+
+##### 6. XML配置 -- bean自动专配
+
+1.正常例子
+
+重新配置新的java类:
+
+```java
+package com.cxx.autowire;
+
+public class Car {
+    private String company;
+    private String brand;
+    private int maxSpeed;
+    private float price;
+	// setter和getter方法
+}
+
+```
+
+```java
+package com.cxx.autowire;
+
+public class Address {
+
+    private String city;
+    private String street;
+//setter和getter方法
+}
+
+```
+
+```java
+package com.cxx.autowire;
+
+public class Persion {
+    private String name;
+    private Car car ;
+    private Address address;
+	// setter和getter方法
+}
+
+```
+
+配置文件：xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean class="com.cxx.autowire.Car" id="car" p:company="jx" p:brand="bm" p:price="100000000" ></bean>
+    <bean class="com.cxx.autowire.Address" id="address" p:city="gz" p:street="mt"></bean>
+
+    <!--可以使用autowire属性指定自动装配的方式，byName 根据bean的名字（id）和当前的setter 风格的属性名进行自动装配。若有匹配的，则进行自动装配，如果没有匹配的。则不装配
+        例如下方的例子：Rersion中有两个属性car、address。有两个封装方法setterCar,setterAddress.
+        那么自动装配根据Name来话，上面刚好有个id为car的bean，以及id为address的bean。则可以配置到id为jx的Persionbean中
+    -->
+    <bean class="com.cxx.autowire.Persion" id="jx" autowire="byName" p:name="jx"></bean>
+
+</beans>
+```
+
+调用：
+
+```java
+ ApplicationContext ctx = new ClassPathXmlApplicationContext("autowire-bean.xml");
+        Persion persion = (Persion) ctx.getBean("jx");
+        System.out.println(persion);
+```
+
+输出；
+
+>Persion{name='jx', car=Car{company='jx', brand='bm', maxSpeed=0, price=1.0E8}, address=Address{city='gz', street='mt'}}
+
+
+
+2.反例
+
+xml配置文件：
+
+```xml
+    <bean class="com.cxx.autowire.Car" id="car1" p:company="jx" p:brand="bm" p:price="100000000" ></bean>
+    <bean class="com.cxx.autowire.Address" id="address2" p:city="gz" p:street="mt"></bean>
+
+    <!--可以使用autowire属性指定自动装配的方式，byName 根据bean的名字（id）和当前的setter 风格的属性名进行自动装配
+
+	反例：上面的id为car1的bean实体并不符合Persion中的setterCar 风格的属性，则自动装配失败。同理address2一样
+    -->
+    <bean class="com.cxx.autowire.Persion" id="jx" autowire="byName" p:name="jx"></bean>
+```
+
+输出：
+
+>Persion{name='jx', car=null, address=null}
+
+说明：
+
+>Spring IOC 容器可以自动装配 Bean. 需要做的仅仅是在 <bean> 的 autowire 属性里指定自动装配的模式
+>
+>装配的类型：
+>
+>- byTpe（根据类型自动装配）--缺点：若IOC容器中有1个以上的而类型匹配的bean，则抛异常
+>- byName (根据名称自动装配)-**必须将目标 Bean 的名称和属性名设置的完全相同.**
+>- constructor(通过构造器自动装配): 当 Bean 中存在多个构造器时, 此种自动装配方式将会很复杂. 不推荐使用
+
+缺点：
+
+> - 在 Bean 配置文件里设置 autowire 属性进行自动装配将会装配 Bean 的所有属性. 然而, 若只希望装配个别属性时, autowire 属性就不够灵活了.
+> - autowire 属性要么根据类型自动装配, 要么根据名称自动装配, **不能两者兼而有之.**
+> - 一般情况下，在实际的项目中很少使用自动装配功能，因为和自动装配功能所带来的好处比起来，明确清晰的配置文档更有说服力一些
+
+
+
+
+
+##### 7. bean之间的关系 -- 继承；依赖
+
+继承是**配置**上的继承
+
+实例：
+
+```xml
+   		<!--现在这个bean是可以实例化的。因为没有设置abstract为true-->
+		<bean id="address" class="com.cxx.autowire.Address" p:city="GZ1" p:street="beijinglu"/>
+		
+         <!--bean 配置继承：使用bean 的parent 属性指定继承哪个bean的配置-->
+		<!--下面的street会覆盖上方的父bean-->
+        <bean id="address2" parent="address"  p:street="baiyunshan"  />
+```
+
+调用：
+
+```java
+        ApplicationContext ctx = new ClassPathXmlApplicationContext("beans-relation.xml");
+        Address address = (Address) ctx.getBean("address");
+        System.out.println(address);
+
+        Address address2 = (Address) ctx.getBean("address2");
+        System.out.println(address2);
+```
+
+输出：
+
+> Address{city='GZ1', street='beijinglu'}
+> Address{city='GZ1', street='baiyunshan'}
+
+说明：
+
+>- **Spring 允许继承 bean 的配置,** 被继承的 bean 称为父 bean. 继承这个父 Bean 的 Bean 称为子 Bean
+>- **子 Bean 从父 Bean 中继承配置, 包括 Bean 的属性配置**
+>- 子 Bean 也可以覆盖从父 Bean 继承过来的配置
+>- 父 Bean 可以作为配置模板, 也可以作为 Bean 实例. **若只想把父 Bean 作为模板, 可以设置 <bean> 的abstract 属性为 true**, 这样 Spring 将**不会实例化**这个 Bean
+>- 并**不是 <bean> 元素里的所有属性都会被继承**. 比如: autowire, abstract 等
+>- 也**可以忽略父 Bean 的 class 属性**, 让子 Bean 指定自己的类, 而共享相同的属性配置. 但此时 abstract 必须设为 true
+
+
+
+- 父 Bean 可以作为配置模板, 也可以作为 Bean 实例. **若只想把父 Bean 作为模板, 可以设置 <bean> 的abstract 属性为 true**, 这样 Spring 将**不会实例化**这个 Bean
+
+案例：
+
+xml配置：
+
+```xml
+    <!--抽象bean： bean 的abstract 属性为true的备案。这样的bean 不能被 IOC 容器实例化，只能用来实例化 -->    
+	<bean id="address" class="com.cxx.autowire.Address" p:city="GZ1" p:street="beijinglu" abstract="true"/>
+
+        <!--bean 配置继承：使用bean 的parent 属性指定继承哪个bean的配置-->
+        <bean id="address2" parent="address"  p:street="baiyunshan"  />
+```
+
+调用：
+
+```java
+        ApplicationContext ctx = new ClassPathXmlApplicationContext("beans-relation.xml");
+        Address address = (Address) ctx.getBean("address");
+        System.out.println(address);
+
+        Address address2 = (Address) ctx.getBean("address2");
+        System.out.println(address2);
+```
+
+输出：
+
+Exception in thread "main" org.springframework.beans.factory.BeanIsAbstractException: Error creating bean with name **'address': Bean definition is abstract**
+
+	at org.springframework.beans.factory.support.AbstractBeanFactory.checkMergedBeanDefinition(AbstractBeanFactory.java:1327)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:285)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:197)
+	at org.springframework.context.support.AbstractApplicationContext.getBean(AbstractApplicationContext.java:1080)
+	at com.cxx.autowire.test.main(test.java:10)
+
+
+- 也**可以忽略父 Bean 的 class 属性**, 让子 Bean 指定自己的类, 而共享相同的属性配置. 但此时 abstract 必须设为 true
+
+实例：
+
+xml配置文件：
+
+```xml
+        <!--若一个bean的class属性没有指定，则该bean必须是一个抽象bean-->
+        <bean id="address"  p:city="GZ1" p:street="beijinglu" abstract="true"/>
+
+        <!--bean 配置继承：使用bean 的parent 属性指定继承哪个bean的配置-->
+        <bean id="address2" class="com.cxx.autowire.Address" parent="address" p:street="baiyunshan"  />
+```
+
+
+
+依赖：
+
+说明：
+
+> - **Spring 允许用户通过 depends-on 属性设定 Bean 前置依赖的Bean**，前置依赖的 Bean 会在本 Bean 实例化之前创建好
+> - 如果前置依赖于多个 Bean，则可以通**过逗号，空格或的方式**配置 Bean 的名称
+
+实例：
+
+xml配置
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+        <!--若一个bean的class属性没有指定，则该bean必须是一个抽象bean-->
+        <bean id="address"  p:city="GZ1" p:street="beijinglu" abstract="true"/>
+
+        <!--bean 配置继承：使用bean 的parent 属性指定继承哪个bean的配置-->
+        <bean id="address2" class="com.cxx.autowire.Address" parent="address" p:street="baiyunshan"  />
+
+        <bean class="com.cxx.autowire.Car" id="car" p:company="cxx" p:brand="fll" p:price="10000000" p:maxSpeed="5000" />
+
+        <!--要求在配置Persion时，必须有一个关联的car 换句话说persion 这个bean 依赖于Car这个bean
+            实验结果：虽然Persion中有一个car属性，但是依赖一个car 的bean 的时候并不会将bean注入到属性car中。
+            所以结果时car=null。依赖表明的说，我会依赖你。但是不一定说以来后就会有结果。
+        -->
+        <bean id="persion" class="com.cxx.autowire.Persion" p:name="cxx" p:address-ref="address2" depends-on="car"/>
+
+</beans>
+```
+
+调用：
+
+```java
+        ApplicationContext ctx = new ClassPathXmlApplicationContext("beans-relation.xml");
+
+        Car car = (Car) ctx.getBean("car");
+        System.out.println(car);
+
+        Persion persion = (Persion) ctx.getBean("persion");
+        System.out.println(persion);
+```
+
+输出：
+
+> Car{company='cxx', brand='fll', maxSpeed=5000, price=1.0E7}
+>
+> Persion{name='cxx', car=null, address=Address{city='GZ1', street='baiyunshan'}}
+
+
+
+##### 8. bean的作用域：singleton；prototype；WEB 环境作用域
+
+![bean的作用域](../images/bean_scope.png)
+
+###### 8.1 singleton
+
+==**默认情况下，在IOC容器中配置一个bean。这个bean是单例的singleton.**==
+
+bean的作用域是singleton，在创建IOC容器的时候，bean会自动创建（注意：构造器无或者无参）
+
+实例：
+
+car.java
+
+```java
+    public Car() {
+        System.out.println("Car Constructor...");
+    }
+```
+
+
+
+xml配置文件：
+
+```xml
+    <!--
+        使用bean 的scope 属性来配置bean的作用域
+        singleton：默认值，容器初始化时创建bean 实例，在整个容器的生命周期内只创建者一个bean。 单例的
+        prototype: 原型的。 容器初始化时不创建bean的实例，在每次请求时都拆个那就一个新的Bean实例，并返回。
+    -->
+    <bean id="car" class="com.cxx.autowire.Car"  scope="singleton">
+        <property name="company" value="cxx" />
+        <property name="brand" value="xian" />
+        <property name="price" value="500000"/>
+    </bean>
+```
+
+调用：
+
+```java
+        ApplicationContext ctx = new ClassPathXmlApplicationContext("beans-scope.xml");
+
+        Car car = (Car) ctx.getBean("car");
+        System.out.println(car);
+
+        Car car1 = (Car) ctx.getBean("car");
+        System.out.println(car1);
+```
+
+输出：
+
+Car Constructor...  这一句话是在：ApplicationContext ctx = new ClassPathXmlApplicationContext("beans-scope.xml"); 这句话的时候产生的。因为创建IOC容器时，会将单例的bean自动的创建实例。
+
+>Car Constructor... 
+>Car{company='cxx', brand='xian', maxSpeed=0, price=500000.0}
+>Car{company='cxx', brand='xian', maxSpeed=0, price=500000.0}
+
+
+
+###### 8.2 prototype
+
+实例：
+
+xml文件:
+
+```xml
+    <!--
+        使用bean 的scope 属性来配置bean的作用域
+        singleton：默认值，容器初始化时创建bean 实例，在整个容器的生命周期内只创建者一个bean。 单例的
+        prototype: 原型的。 容器初始化时不创建bean的实例，在每次请求时都拆个那就一个新的Bean实例，并返回。
+    -->
+    <bean id="car" class="com.cxx.autowire.Car"  scope="prototype">
+        <property name="company" value="cxx" />
+        <property name="brand" value="xian" />
+        <property name="price" value="500000"/>
+    </bean>
+```
+
+调用：
+
+```java
+        ApplicationContext ctx = new ClassPathXmlApplicationContext("beans-scope.xml");
+
+        Car car = (Car) ctx.getBean("car");
+        System.out.println(car);
+
+        Car car1 = (Car) ctx.getBean("car");
+        System.out.println(car1);
+```
+
+输出：
+
+>Car Constructor...
+>Car{company='cxx', brand='xian', maxSpeed=0, price=500000.0}
+>Car Constructor...
+>Car{company='cxx', brand='xian', maxSpeed=0, price=500000.0}
+
+
+
+
+
+##### 9. 使用外部属性文件
+
+> 缘由：某些配置文件不太适合集成到spring.xml文件中（否则要改动的时候操作spring配置文件不太合适了）。所以将其放置为外部属性文件，倒是spring可以引用即可
+>
+> 案例：
+>
+> - 文件路径
+> - 数据源配置
+
+说明：
+
+> - 在配置文件里配置 Bean 时, 有时需要在 Bean 的配置里混入**系统部署的细节信息(例如: 文件路径, 数据源配置信息等).** 而这些部署细节实际上需要和 Bean 配置相分离
+> - Spring 提供了一个 PropertyPlaceholderConfigurer 的 **BeanFactory 后置处理器**, 这个处理器允许用户将 Bean 配置的部分内容外移到**属性文件**中. 可以在 Bean 配置文件里使用形式为 **${var}** 的变量, PropertyPlaceholderConfigurer 从属性文件里加载属性, 并使用这些属性来替换变量.
+> - Spring 还允许在属性文件中使用 ${propName}，以实现属性之间的相互引用。
+
+###### 9.1 以数据源配置为例
+
+1.引入C3P0的数据池、以及mysql的jar包
+
+2.配置数据源属性文件(建议放置在类路径下)：
+
+```properties
+user=root
+password=123456
+driverclass=com.mysql.jdbc.Driver
+jdbcurl=jdbc:mysql:///test
+```
+
+3.xml引用属性文件内容
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+        <!--要引用一句话：xmlns:context="http://www.springframework.org/schema/context"-->
+        <!--导入属性文件-->
+        <context:property-placeholder location="classpath:mydb.properties"/>
+
+        <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" >
+                <!--使用外部化属性文件的属性-->
+                <property name="user" value="${user}" ></property>
+                <property name="password" value="${password}"></property>
+                <property name="driverClass" value="${driverclass}"/>
+                <property name="jdbcUrl" value="${jdbcurl}"/>
+        </bean>
+
+</beans>
+```
+
+
+
+##### 10 SpEL
+
+> SpEL == Spring表达式语言（简称SpEL）
+>
+> 是一个**支持运行时查询和操作对象图的强大的表达式语言。**
+
+>- 语法类似于 EL：SpEL 使用 **#{…}** 作为定界符，所有在大框号中的字符都将被认为是 SpEL
+>- SpEL 为 bean 的属性进行**动态赋值**提供了便利
+>- 通过 SpEL 可以实现：
+>  - 通过 bean 的 id 对 bean 进行引用
+>  - 调用方法以及引用对象中的属性
+>  - 计算表达式的值
+>  - 正则表达式的匹配
+
+实例：
+
+java类
+
+```java
+package com.cxx.spel;
+public class Address {
+    private String city;
+    private String street;
+  	// setter和getter方法
+}
+```
+
+```java
+package com.cxx.spel;
+public class Car {
+    private String brand;
+    private float price;
+    private float typePerimeter; // 轮胎半径
+	// setter和getter方法
+}
+```
+
+```java
+package com.cxx.spel;
+
+public class Persion {
+    private String name;
+    // 应用其他数据
+    private Car car ;
+    // 引用其他bean中的属性值
+    private String city;
+    // 引用sple运算符
+    private String info;
+  
+  	// setter和getter方法
+}
+```
+
+xml配置文件
+
+```xml
+<bean id="address" class="com.cxx.spel.Address">
+        <!--使用SeEL 使用字面量-->
+        <property name="city" value="#{'GZ'}"/>
+        <property name="street" value="庙头" />
+    </bean>
+    <bean id="car" class="com.cxx.spel.Car" >
+        <property name="brand" value="Audi"/>
+        <property name="price" value="3000000"/>
+        <!--使用SpEL 引用类的静态属性-->
+        <property name="typePerimeter" value="#{T(java.lang.Math).PI*80}"></property>
+    </bean>
+    <bean id="person" class="com.cxx.spel.Persion" >
+        <!--使用SpEL 来引用其他的bean-->
+        <property name="car" value="#{car}"/>
+
+        <!--使用SpEL 来引用其他的Bean的属性-->
+        <property name="city" value="#{address.city}" />
+
+        <!--使用SpEL 中使用运算符-->
+        <property name="info" value="#{car.price >= 300000 ? '金领' : '白领'} "/>
+
+        <property name="name" value="cxx" />
+    </bean>
+```
+
+调用：
+
+```java
+  ApplicationContext ctx = new ClassPathXmlApplicationContext("bean-spel.xml");
+
+        Address address = (Address) ctx.getBean("address");
+        System.out.println(address);
+
+        Car car = (Car) ctx.getBean("car");
+        System.out.println(car);
+
+        Persion persion = (Persion) ctx.getBean("person");
+        System.out.println(persion);
+```
+
+输出结果：
+
+>Address{city='GZ', street='庙头'}
+>Car{brand='Audi', price=3000000.0, typePerimeter=251.32741}
+>Persion{name='cxx', car=Car{brand='Audi', price=3000000.0, typePerimeter=251.32741}, city='GZ', info='金领'}
+
+使用方式：
+
+![字面值](../images/Spel_1.png)
+
+![引用bean对象、属性、链式 ](../images/Spel_2.png)
+
+![算术运算符比较运算符](../images/Spel_3.png)
+
+![运算符2-and_or_not if-else 正则表达式](../images/Spel_4.png)
+
+![引用静态方法或静态变量](../images/Spel_5.png)
+
+
+
+##### 11. IOC容器Bean的生命周期
+
+######1.Bean的生命周期方法
+
+> + Spring IOC 容器可以管理 Bean 的生命周期, Spring 允许在 Bean 生命周期的特定点执行定制的任务. 
+> + **Spring IOC 容器对 Bean 的生命周期进行管理的过程:**
+>   1. 过构造器或工厂方法创建 Bean 实例
+>   2. 为 Bean 的属性设置值和对其他 Bean 的引用
+>   3. **==调用 Bean 的初始化方法==**
+>   4. Bean 可以使用了
+>   5. 当容器关闭时, 调用 Bean 的销毁方法
+
+> 在 Bean 的声明里设置 init-method 和 destroy-method 属性, 为 Bean 指定初始化和销毁方法.
+
+
+
+实例：
+
+java类
+
+```java
+package com.cxx.cycle;
+public class Car {
+    public Car() {
+        System.out.println("Car's Constructor....");
+    }
+    private String brand;
+    public void setBrand(String brand) {
+      	System.out.println("setBrand...");
+        this.brand = brand;
+    }
+    public void initCar() {
+        System.out.println("Car init...");
+    }
+    public void destroyCar() {
+        System.out.println("Car destroy...");
+    }
+}
+```
+
+xml配置
+
+```xml
+    <!--
+        init-method="initCar" destroy-method="destroyCar" 表示的是，容器在创建的时候，会自动创建id为car的bean（反射，构造器创建/因为是单例模式，所以能否自动传教），
+        由于设置了init-method的方法是Car类中的某一个方法，则在创建bean时调用该方法。
+        destroy-method设置的方法时在容器关闭时所用到的。
+      -->
+    <bean id="car" class="com.cxx.cycle.Car" init-method="initCar" destroy-method="destroyCar">
+        <property name="brand" value="Audi"/>
+    </bean>
+```
+
+调用：
+
+```java
+        ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("beans-cycle.xml");
+        Car car = (Car) ctx.getBean("car");
+        System.out.println(car);
+        // 关闭IOC容器
+        ctx.close();
+```
+
+结果：
+
+>// 加载xml文件（spring的xml配置文件）将反射Car的构造器创建出Car的bean，然后会调用属性的setter方法赋值（在bean中有配置brand的属性赋值）。最后调用init-method（初始化方法）中写着的Car里面的方法。 -- 有下方可得：是创建完对象后再调用初始化方法得。
+>
+>信息: $Loading$ XML bean definitions from class path resource [beans-cycle.xml]
+>**Car's Constructor....**
+>**setBrand...**
+>**Car init...**
+>**Car{brand='Audi'}**
+>**Car destroy...**
+>九月 08, 2018 3:32:49 下午 org.springframework.context.support.ClassPathXmlApplicationContext $doClose$
+>
+>// IOC容器在关闭的时候，会自动调用destroy-method里面的方法（这个方法时类中的的一个方法）
+
+
+
+######2.创建Bean后置处理器
+
+> 自己的语言描述：
+>
+> Bean后置处理器需要实现BeanPostProcessor这个接口，然后在spring的配置文件中进行配置上去。【提示的是，自己的后置处理器在xml文件中并不需要配置id】
+>
+> 提示：
+>
+> 1. 可以有多个自己的后置处理器配置到spring的配置文件中。
+> 2. bean的后置处理器都会对自己配置在xml文件中的bean实例逐一处理。**其典型应用是: 检查 Bean 属性的正确性或根据特定的标准更改 Bean 的属性.**
+
+利用上方的Car类
+
+增加多一个Address.class
+
+```java
+package com.cxx.cycle;
+
+public class Address {
+
+    private String street;
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public Address() {
+        System.out.println("Address's 构造器");
+    }
+
+    @Override
+    public String toString() {
+        return "Address{" +
+                "street='" + street + '\'' +
+                '}';
+    }
+
+    public void addressInit() {
+        System.out.println("Address中得方法addressInit被调用了");
+    }
+
+    public void addressDestroy() {
+        System.out.println("Address中的方法addressDestroy被调用了");
+    }
+}
+
+```
+
+创建自己的bean后置处理器：
+
+```java
+package com.cxx.cycle;
+
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+
+public class MyBeanPostProcessor implements BeanPostProcessor {
+    public Object postProcessBeforeInitialization(Object o, String s) throws BeansException {
+        System.out.println("自己设置的后置处理器中postProcessBeforeInitialization()方法生效【在初始化方法 前 起作用】了：传输的bean对象为：" + o+"\tbean对象id（名称）为：" + s);
+        if (o instanceof Car) {
+            System.out.println("后置处理器中现在接收到的对象是Car类的实例，则可以进行对其操作处理（例如顶替、更换等操作，不知道删除可不可以）");
+        }
+        return o;
+    }
+
+    public Object postProcessAfterInitialization(Object o, String s) throws BeansException {
+        System.out.println("自己设置的后置处理器中postProcessAfterInitialization()方法生效【在初始化方法 后 起作用】了：传输的bean对象为：" + o+"\tbean对象id（名称）为：" + s);
+        return o;
+    }
+}
+
+```
+
+
+
+xml配置文件：
+
+```xml
+
+    <!--
+        init-method="initCar" destroy-method="destroyCar" 表示的是，容器在创建的时候，会自动创建id为car的bean（反射，构造器创建/因为是单例模式，所以能否自动传教），
+        由于设置了init-method的方法是Car类中的某一个方法，则在创建bean时调用该方法。
+        destroy-method设置的方法时在容器关闭时所用到的。
+      -->
+    <bean id="car" class="com.cxx.cycle.Car" init-method="initCar" destroy-method="destroyCar">
+        <property name="brand" value="Audi"/>
+    </bean>
+
+    <bean id="address" class="com.cxx.cycle.Address" init-method="addressInit" destroy-method="addressDestroy" >
+        <property name="street" value="龙蟠里"/>
+    </bean>
+
+    <!--
+        实现BeanPostProcessor 接口，并具体提供
+        Object postProcessBeforeInitialization(Object o, String s) ：init-method 之 前 被调用
+        Object postProcessAfterInitialization(Object o, String s)： init-method 指 后 被调用
+        的实现
+
+        o: bean 实例本身
+        s: IOC 容器配置的bean的名字
+        返回值：是实际上返回给用户的那个Bean，注意：可以在以上两个方法中修改返回的Bean，甚至返回一个新的bean
+    -->
+    <!--配置bean 的后置处理器：不需要配置id， IOC 容器自动识别是一个 实现BeanPostProcessor-->
+    <bean class="com.cxx.cycle.MyBeanPostProcessor"></bean>
+
+```
+
+调用：
+
+```java
+ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("beans-cycle.xml");
+        Car car = (Car) ctx.getBean("car");
+        System.out.println(car);
+
+        Address address = (Address) ctx.getBean("address");
+        System.out.println(address);
+
+        // 关闭IOC容器
+        ctx.close();
+```
+
+输出：
+
+>信息: Loading XML bean definitions from class path resource [beans-cycle.xml]
+>
+>-------------------------------------------
+>
+>Car's Constructor....
+>setBrand...
+>自己设置的后置处理器中postProcessBeforeInitialization()方法生效【在初始化方法 前 起作用】了：传输的bean对象为：Car{brand='Audi'}	bean对象id（名称）为：car
+>**后置处理器中现在接收到的对象是Car类的实例，则可以进行对其操作处理（例如顶替、更换等操作，不知道删除可不可以）**
+>Car init...
+>自己设置的后置处理器中postProcessAfterInitialization()方法生效【在初始化方法 后 起作用】了：传输的bean对象为：Car{brand='Audi'}	bean对象id（名称）为：car
+>
+>-----------------------------
+>
+>Address's 构造器
+>自己设置的后置处理器中postProcessBeforeInitialization()方法生效【在初始化方法 前 起作用】了：传输的bean对象为：Address{street='龙蟠里'}	bean对象id（名称）为：address
+>Address中得方法addressInit被调用了
+>自己设置的后置处理器中postProcessAfterInitialization()方法生效【在初始化方法 后 起作用】了：传输的bean对象为：Address{street='龙蟠里'}	bean对象id（名称）为：address
+>
+>-----------------------------------------------------------
+>
+>九月 08, 2018 4:09:53 下午 org.springframework.context.support.ClassPathXmlApplicationContext doClose
+>信息: Closing org.springframework.context.support.ClassPathXmlApplicationContext@728938a9: startup date [Sat Sep 08 16:09:52 CST 2018]; root of context hierarchy
+>
+>-------------------------------
+>
+>Car{brand='Audi'}
+>Address{street='龙蟠里'}
+>
+>--------------------------
+>
+>Address中的方法addressDestroy被调用了
+>Car destroy...
+
