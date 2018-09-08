@@ -712,3 +712,37 @@ Map的说明
 
    ​
 
+
+###### 5.5 p命名空间配置bean属性
+
+1.引入p命名空间
+
+```xml
+ xmlns:p="http://www.springframework.org/schema/p"
+```
+
+2.利用前面java类，配置到xml文件中：
+
+```xml
+ <!--配置单例的集合bean，以供多个bean进行引用，需要导入util命名空间，在idea中打出<util:后Alt+Enter便可自动导入了-->    
+<util:list id = "cars">
+        <ref bean="car1"/>
+        <ref bean="car2"/>
+    </util:list>
+<!--通过p命名空间为bean的属性赋值，需要先导入p命名空间，相对于传统的配置方式更加的简洁-->
+    <bean id="YZ" class="com.cxx.entity.collection.RichPersion" p:age="18" p:name="richPersion" p:car-ref="cars"></bean>
+
+```
+
+调用：
+
+```java
+        RichPersion qian = (RichPersion) ctx.getBean("YZ");
+        System.out.println(qian);
+```
+
+结果：
+
+> Persion{name='richPersion', age=18, car=[Car{company='jx', brand='bama', maxSpeed=120, price=3000.0}, Car{company='cxx', brand='fll', maxSpeed=0, price=5200.0}]}
+
+一句话总结：P命名空间是在bean中配置封装的类的属性值的。

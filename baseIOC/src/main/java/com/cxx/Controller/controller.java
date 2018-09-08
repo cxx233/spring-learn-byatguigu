@@ -37,16 +37,19 @@ public class controller {
 //        Persion FDC = (Persion) ctx.getBean("FDC");
 //        System.out.println(FDC);
 
-        com.cxx.entity.collection.RichPersion YK = (com.cxx.entity.collection.RichPersion) ctx.getBean("YK");
-        System.out.println(YK);
+//        com.cxx.entity.collection.RichPersion YK = (com.cxx.entity.collection.RichPersion) ctx.getBean("YK");
+//        System.out.println(YK);
+//
+//        MoreRichPersion MRP = (MoreRichPersion) ctx.getBean("GDK");
+//        System.out.println(MRP);
+//
+//        DBProperties properties = (DBProperties) ctx.getBean("properties");
+//        System.out.println(properties);
+//
+//        RichPersion rp = (RichPersion) ctx.getBean("rp");
+//        System.out.println(rp);
 
-        MoreRichPersion MRP = (MoreRichPersion) ctx.getBean("GDK");
-        System.out.println(MRP);
-
-        DBProperties properties = (DBProperties) ctx.getBean("properties");
-        System.out.println(properties);
-
-        RichPersion rp = (RichPersion) ctx.getBean("rp");
-        System.out.println(rp);
+        RichPersion qian = (RichPersion) ctx.getBean("YZ");
+        System.out.println(qian);
     }
 }
