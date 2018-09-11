@@ -1522,3 +1522,277 @@ ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("beans-c
 >Address中的方法addressDestroy被调用了
 >Car destroy...
 
+
+
+说明：
+
+> + Bean 后置处理器允许在调用初始化方法前后对 Bean 进行额外的处理.
+> + Bean 后置处理器对 IOC 容器里的所有 Bean 实例逐一处理, 而非单一实例. 其典型应用是: 检查 Bean 属性的正确性或根据特定的标准更改 Bean 的属性.
+> + 对Bean 后置处理器而言, 需要实现  接口.*org.springframework.beans.factory.config.BeanPostProcessor*在初始化方法被调用前后, Spring 将把每个 Bean 实例分别传递给上述接口的以下两个方法:
+
+添加 Bean 后置处理器后 Bean 的生命周期:
+
+> Spring IOC 容器对 Bean 的生命周期进行管理的过程:
+>
+> 1. 过构造器或工厂方法创建 Bean 实例
+> 2. 为 Bean 的属性设置值和对其他 Bean 的引用
+> 3. <u>将 Bean 实例传递给 Bean 后置处理器的 postProcess**Before**Initialization 方法</u>
+> 4. **调用 Bean 的初始化方法**
+> 5. <u>将 Bean 实例传递给 Bean 后置处理器的 postProcess**After**Initialization方法</u>
+> 6. Bean 可以使用了
+> 7. 当容器关闭时, 调用 Bean 的销毁方法
+
+
+
+##### 12.Bean的配置方式：通过工厂方法（静态工厂方法&实例工厂方法）
+案例： 一个Car实体，一个静态工厂类，一个实例工厂类
+
+Car类
+
+```java
+package com.cxx.factory;
+
+public class Car {
+    private String company;
+    private String brand;
+    private int maxSpeed;
+    private float price;
+
+    public Car(String company, String brand, int maxSpeed) {
+        this.company = company;
+        this.brand = brand;
+        this.maxSpeed = maxSpeed;
+    }
+
+    public Car(String company, String brand, float price) {
+        this.company = company;
+        this.brand = brand;
+        this.price = price;
+    }
+	// setter和getter方法
+}
+
+```
+
+
+
+静态工厂类：
+
+```java
+package com.cxx.factory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 静态工厂方法：直接某一个类的静态方法就可以返回Bean 的实例
+ */
+public class StaticCarFactory {
+    private static Map<String,Car> cars = new HashMap<String, Car>();
+
+    static {
+        cars.put("Audi",new Car("jx","audi Q7",700000f));
+        cars.put("BMW",new Car("cxx","bmw m5", 800000.0f));
+    }
+
+    public static Car getCar(String name) {
+        return cars.get(name);
+    }
+
+}
+```
+
+
+
+实例工厂类：
+
+```java
+package com.cxx.factory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 实例工厂方法：实例工厂的方法，即先需要创建工厂本身，再调用工厂的实例方法来返回bean的实例。
+ */
+public class InstanceCarFactory {
+    private  Map<String,Car> cars =null;
+
+  
+    public InstanceCarFactory(){
+        cars= new HashMap<String, Car>();
+        cars.put("Ford",new Car("Ford","MENGQ X5",600000f));
+        cars.put("BenChi",new Car("BenChi","BENCHI e370", 1200000.0f));
+    }
+
+    public Car getCar(String name) {
+        return cars.get(name);
+    }
+
+}
+
+```
+
+
+
+spring的xml文件配置：
+
+```xml
+
+    <!-- 通过静态工厂方法来配置bean。 注意不是配置静态工厂方法实例， 而是配置bean 实例-->
+    <!--
+        class 属性： 指向静态工厂方法的全类名
+        factory-method： 指向静态工厂方法的名字
+        constructor-arg： 如果工厂方法需要传入参数，则使用constructor-arg 来配置参数
+    -->
+    <bean id="car1" class="com.cxx.factory.StaticCarFactory" factory-method="getCar">
+        <constructor-arg><value>Audi</value></constructor-arg>
+    </bean>
+
+<!--下方的是实例工厂方法的实现-->
+    <!--配置工厂的实例~ 实例工厂方法 -->
+<!--由于是默认单例模式，所以这个工厂是创建一次，然后调用无参构造方法进行创建实例后，里面的cars就会有值。则可以根据方法getCar进行获取对应的Car实体类-->
+    <bean id="carFactory" class="com.cxx.factory.InstanceCarFactory" ></bean>
+
+    <!-- 通过实例工厂方法来配置bean-->
+    <bean id="car2"  factory-bean="carFactory" factory-method="getCar">
+        <constructor-arg><value>Ford</value></constructor-arg>
+    </bean>
+```
+
+
+
+调用：
+
+```java
+        ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("beans-factory.xml");
+        Car car1 = (Car) ctx.getBean("car1");
+        System.out.println(car1);
+        Car car2 = (Car) ctx.getBean("car2");
+        System.out.println(car2);
+
+        // 关闭IOC容器
+        ctx.close();
+```
+
+
+
+输出：
+
+>信息: Loading XML bean definitions from class path resource [beans-factory.xml]信息: Loading XML bean definitions from class path resource [beans-factory.xml]
+>Car{company='jx', brand='audi Q7', maxSpeed=0, price=700000.0}
+>Car{company='Ford', brand='MENGQ X5', maxSpeed=0, price=600000.0}
+>九月 08, 2018 10:59:52 下午 org.springframework.context.support.ClassPathXmlApplicationContext doClose
+>九月 08, 2018 10:59:52 下午 org.springframework.context.support.ClassPathXmlApplicationContext doClose
+
+
+
+说明：
+
+###### 通过调用静态工厂方法创建 Bean
+
+>- 调用**静态工厂方法**创建 Bean是**将对象创建的过程封装到静态方法**中. 当客户端需要对象时, 只需要简单地调用静态方法, 而不同关心创建对象的细节.
+>- 要声明通过静态方法创建的 Bean, 需要在 Bean 的 **class** 属性里指定拥有该工厂的方法的类, 同时在 **factory-method** 属性里指定工厂方法的名称. 最后, 使用 **<constrctor-arg>** 元素为该方法传递方法参数.
+
+###### 通过调用实例工厂方法创建 Bean
+
+>+ 实例工厂方法: 将对象的创建过程封装到另外一个对象实例的方法里. 当客户端需要请求对象时, 只需要简单的调用该实例方法而不需要关心对象的创建细节.
+>+ 要声明通过实例工厂方法创建的 Bean
+>  1. 在 bean 的 **factory-bean** 属性里指定拥有该工厂方法的 Bean
+>  2. 在 **factory-method** 属性里指定该工厂方法的名称
+>  3. 使用 **construtor-arg** 元素为工厂方法传递方法参数
+
+
+
+##### 13. 通过FactoryBean 配置Bean
+
+实例：
+
+Car.java
+
+```java
+package com.cxx.beanFactory;
+
+public class Car {
+    private String company;
+    private String brand;
+    private int maxSpeed;
+    private float price;
+	// setter 和getter方法
+}
+```
+
+自定义的FactoryBean
+
+```java
+package com.cxx.beanFactory;
+
+import org.springframework.beans.factory.FactoryBean;
+// 自定义的FactoryBean 需要实现FactoryBean 接口
+public class CarFactory implements FactoryBean<Car> {
+
+    private String brand ;
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    //    返回bean的对象
+    public Car getObject() throws Exception {
+        return new Car("jx",brand,500000f);
+    }
+
+//    返回的bean 的类型
+    public Class<?> getObjectType() {
+        return Car.class;
+    }
+
+//    是否单例
+    public boolean isSingleton() {
+        return false;
+    }
+}
+
+```
+
+配置spring的xml文件
+
+```xml
+    <!--
+        通过FactoryBean 来配置Bean 的实例
+        class: 指向FactoryBean 的全类名
+        property： 配置FactoryBean 的属性
+
+        但实际返回的实例却是 FactoryBean 的 getObject() 方法返回的实例
+    -->
+    <bean id="car" class="com.cxx.beanFactory.CarFactory" >
+        <property name="brand" value="家熙"/>
+    </bean>
+```
+
+调用：
+
+```java
+        ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("factory-bean.xml");
+        Car car1 = (Car) ctx.getBean("car");
+        System.out.println(car1);
+
+        // 关闭IOC容器
+        ctx.close();
+```
+
+输出：
+
+> Car{company='jx', brand='家熙', maxSpeed=0, price=500000.0}
+
+
+
+###### 说明:实现 FactoryBean 接口在 Spring IOC 容器中配置 Bean
+
+> - Spring 中有两种类型的 Bean, 一种是普通Bean, 另一种是工厂Bean, 即FactoryBean. 
+> - 工厂 Bean 跟普通Bean不同, 其返回的对象不是指定类的一个实例, 其返回的是该工厂 Bean 的 getObject 方法所返回的对象 
+
+
+
+
+

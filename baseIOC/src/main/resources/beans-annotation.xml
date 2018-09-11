@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+        <!--&lt;!&ndash;指定Spring IOC容器扫描的包&ndash;&gt;-->
+        <!--<context:component-scan base-package="com.cxx.annotation"></context:component-scan>-->
+
+
+        <!--指定Spring IOC容器扫描的包
+            可以通过resource-pattern 指定扫描的资源
+        -->
+        <!--<context:component-scan base-package="com.cxx.annotation"-->
+        <!--resource-pattern="reposity/*.class"></context:component-scan>-->
+
+        <!--
+        context:exclude-filter 子节点指定派出那些指定表达式的组件，
+        这里的排除是说将组件为Repository的annotation给排除掉，将这类型的所配置的Bean都排除都不生效了
+        -->
+        <!--<context:component-scan base-package="com.cxx.annotation">-->
+                <!--<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Repository"/>-->
+        <!--</context:component-scan>-->
+
+
+        <!--
+                context:include-filter 子节点指定包含那些表达式的组件，该子节点需要use-default-filters（需要改为false）配合使用
+                use-default-filters:表示的是使用默认的filters。如果值为true，则下方的context:include-filter 不生效，因为都使用了默认的filters，那下方就不会再用了
+                只有use-default-filters的值为false的话，那么下方的包含的组件才会生效
+         -->
+        <!--<context:component-scan base-package="com.cxx.annotation"-->
+                <!--use-default-filters="false">-->
+                <!--<context:include-filter type="annotation"  expression="org.springframework.stereotype.Repository"/>-->
+        <!--</context:component-scan>-->
+
+        <!--
+                这个排除的类型是：assignable。指定确定的类以及实现类是无法正常形成bean（不能正常形成组件）
+                expression：的内容是类的接口，表示该类以及类的实现都不会正常放入容器中
+                expression：的内容是抽象类的话，还没实现。可以尝试
+        -->
+        <!--<context:component-scan base-package="com.cxx.annotation">-->
+                <!--<context:exclude-filter type="assignable"  expression="com.cxx.annotation.reposity.UserRepository"/>-->
+        <!--</context:component-scan>-->
+
+        <!--
+                这个只包含的类型是：assignable。com.cxx.annotation.reposity.UserRepository只有该类（接口）的以及实现类才会放置在容器中。在com.cxx.annotation这个扫描包的前提下
+        -->
+        <context:component-scan base-package="com.cxx.annotation" use-default-filters="false">
+                <context:include-filter type="assignable"  expression="com.cxx.annotation.reposity.UserRepository"/>
+        </context:component-scan>
+</beans>
