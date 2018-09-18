@@ -561,6 +561,13 @@ public class UserJdbcRepository implements UserRepository {
 >
 >    ​
 >
-> 3.
->
-> 
+
+可参考学习该[链接](https://blog.csdn.net/u013257679/article/details/52295106)的知识
+
+###### 使用 @Resource 或 @Inject 自动装配 Bean
+
+> - Spring 还支持 @Resource 和 @Inject 注解，这两个注解和 @Autowired 注解的功用类似
+> - **==@Resource 注解要求提供一个 Bean 名称的属性，若该属性为空，则自动采用标注处的变量或方法名作为 Bean 的名称==**
+> - @Inject 和 @Autowired 注解一样也是按类型匹配注入的 Bean， 但没有 reqired 属性
+> - 建议使用 @Autowired 注解
+
