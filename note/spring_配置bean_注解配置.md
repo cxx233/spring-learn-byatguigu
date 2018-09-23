@@ -571,3 +571,5 @@ public class UserJdbcRepository implements UserRepository {
 > - @Inject 和 @Autowired 注解一样也是按类型匹配注入的 Bean， 但没有 reqired 属性
 > - 建议使用 @Autowired 注解
 
+
+

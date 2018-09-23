@@ -177,3 +177,6 @@ public class UserService extends BaseService<User> {
 **说明**：
 
 > Spring 4.x 中可以为子类注入子类对应的泛型类型的成员变量的引用,（这样子类和子类对应的泛型类自动建立关系）
+
+![泛型注入](../images/泛型注入例子.png)
+

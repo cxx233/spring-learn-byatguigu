@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/SpringAop/SpringAop.iml" filepath="$PROJECT_DIR$/SpringAop/SpringAop.iml" />
       <module fileurl="file://$PROJECT_DIR$/baseIOC/baseIOC.iml" filepath="$PROJECT_DIR$/baseIOC/baseIOC.iml" />
       <module fileurl="file://$PROJECT_DIR$/springlearnbyatguigu.iml" filepath="$PROJECT_DIR$/springlearnbyatguigu.iml" />
     </modules>
