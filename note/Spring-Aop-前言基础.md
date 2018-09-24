@@ -1,12 +1,14 @@
+
+
 #### Aop 前言基础
 
-1.需求
+######1.需求
 
 ![需求](../images/aop/AOP前奏-需求.png)
 
 日志以及验证者两大功能功能都在业务代码中显示冗余
 
-2.正常代码实现：
+######2.正常代码实现：
 
 ![AOP前奏-普通代码实现.png](../images/aop/AOP前奏-普通代码实现.png)
 
@@ -25,7 +27,7 @@
 
 ![AOP前奏-计算器代理实现图.png](../images/aop/AOP前奏-计算器代理实现图.png)
 
-3.实现代码：
+######3.实现代码：
 
 **3.1 第一种代理类 -- 实现InvocationHandler接口，并静态方法返回对应的代理实现类**
 
@@ -279,7 +281,7 @@ public class CalculatorValidationHandlerSecondMethod {
 
 3.4 很明显，一般多层的代理类会先调用最外层代理类的内容，然后进行调用内层代理类的实现。
 
-3.4.1 内部与外部互相调换后的结果
+3.4.1 内部与外部互相调换后的结果 -- 先日志代理，后验证代理
 
 ```java
         // 第二种方法的实现调用：
@@ -316,3 +318,30 @@ public class CalculatorValidationHandlerSecondMethod {
 > 	at com.cxx.aop.prelude.handle.CalculatorValidationHandlerSecondMethod$1.invoke(CalculatorValidationHandlerSecondMethod.java:39)
 > 	at com.sun.proxy.$Proxy0.add(Unknown Source)
 > 	... 7 more
+
+
+
+###### 4.AOP简介
+
+4.1 AOP简介
+
+1. AOP(Aspect-Oriented Programming, **面向切面编程**): 是一种新的方法论, 是对传统 OOP(Object-Oriented Programming, 面向对象编程) 的补充.
+2. AOP 的主要编程对象是**切面**(aspect), 而**切面是模块化横切关注点**.
+3. 在应用 AOP 编程时, 仍然需要**定义公共功能**, 但可以明确的定义这个功能在哪里, 以什么方式应用, **并且不必修改受影响的类. 这样一来横切关注点就被模块化到特殊的对象(切面)里.**
+4. AOP 的好处:
+   - 每个事物逻辑位于一个位置, 代码不分散, 便于维护和升级
+   - 业务模块更简洁, 只包含核心业务代码.
+
+4.2 图片说明解释：
+
+![AOP前奏-aop图片理解.png](../images/aop/AOP前奏-aop图片理解.png)
+
+**4.3 AOP 术语**
+
+- 切面(Aspect):  ==横切关注点(跨越应用程序多个模块的功能)被模块化的特殊对象==
+- 通知(Advice):  ==切面必须要完成的工作==
+- 目标(Target): ==被通知的对象==
+- 代理(Proxy): ==向目标对象应用通知之后创建的对象==
+- 连接点（Joinpoint）：==程序执行的某个特定位置==：**如类某个方法调用前、调用后、方法抛出异常后等**。**连接点由两个信息确定：方法表示的程序执行点；相对点表示的方位。**例如 ArithmethicCalculator#add() 方法执行前的连接点，执行点为 ArithmethicCalculator#add()； 方位为该方法执行前的位置
+- 切点（pointcut）：**每个类都拥有多个连接点**：例如 ArithmethicCalculator 的所有方法实际上都是连接点，即**连接点是程序类中客观存在的事务**。==AOP 通过切点定位到特定的连接点。类比：连接点相当于数据库中的记录，切点相当于查询条件==。切点和连接点不是一对一的关系，一个切点匹配多个连接点，切点通过 org.springframework.aop.Pointcut 接口进行描述，它使用类和方法作为连接点的查询条件。
+
